@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Report — Quick Action for Apple Mail</title>
+    <meta name="description" content="One-click phishing reporting for Apple Mail. Forwards emails as .eml attachments to APWG, Netcraft, and Verbraucherzentrale.">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-alt: #f6f8fa;
+            --text: #1f2328;
+            --text-muted: #636c76;
+            --accent: #0969da;
+            --accent-hover: #0550ae;
+            --border: #d0d7de;
+            --code-bg: #f0f3f6;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --green: #1a7f37;
+            --red: #cf222e;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0d1117;
+                --bg-alt: #161b22;
+                --text: #e6edf3;
+                --text-muted: #8b949e;
+                --accent: #58a6ff;
+                --accent-hover: #79c0ff;
+                --border: #30363d;
+                --code-bg: #1c2028;
+                --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                --green: #3fb950;
+                --red: #f85149;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 64px 0 48px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        header p {
+            font-size: 1.15em;
+            color: var(--text-muted);
+            max-width: 540px;
+            margin: 0 auto 32px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        .btn-secondary {
+            background: var(--bg-alt);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover { background: var(--border); }
+
+        /* Sections */
+        section {
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        section h2 {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.01em;
+        }
+
+        section p {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* Flow diagram */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 32px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .flow-step .icon {
+            font-size: 1.8em;
+            margin-bottom: 6px;
+        }
+
+        .flow-step .label {
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .flow-arrow {
+            font-size: 1.4em;
+            color: var(--text-muted);
+        }
+
+        /* Recipients table */
+        .recipients {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+        }
+
+        .recipients th,
+        .recipients td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .recipients th {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .recipients td {
+            font-size: 0.95em;
+        }
+
+        .recipients code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 0.75em;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: var(--code-bg);
+            color: var(--text-muted);
+        }
+
+        /* Install steps */
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps li {
+            position: relative;
+            padding: 16px 0 16px 56px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .steps li:last-child { border-bottom: none; }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .steps li strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .steps li span {
+            color: var(--text-muted);
+            font-size: 0.92em;
+        }
+
+        code.block {
+            display: block;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* QA table */
+        .qa-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .qa-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            align-items: baseline;
+        }
+
+        .qa-list li:last-child { border-bottom: none; }
+
+        .qa-check {
+            color: var(--green);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Footer */
+        footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>Phishing Report</h1>
+        <p>One-click phishing reporting for Apple Mail. Forwards emails as <code>.eml</code> attachments to APWG, Netcraft, and Verbraucherzentrale &mdash; with full original headers preserved.</p>
+        <div class="btn-group">
+            <a href="https://raw.githubusercontent.com/kyannik/applescript-phishing-report/main/report_phishing.applescript" class="btn btn-primary">Download Script</a>
+            <a href="https://github.com/kyannik/applescript-phishing-report" class="btn btn-secondary">View on GitHub</a>
+        </div>
+    </header>
+
+    <section>
+        <h2>How it works</h2>
+        <p>Select a phishing email in Apple Mail, trigger the Quick Action, and it's reported automatically. Each email is sent as its own report with the original <code>.eml</code> attached.</p>
+        <div class="flow">
+            <div class="flow-step">
+                <div class="icon">&#x2709;&#xFE0F;</div>
+                <div class="label">Select email</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <div class="icon">&#x26A1;</div>
+                <div class="label">Quick Action</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <div class="icon">&#x1F4E8;</div>
+                <div class="label">.eml attached</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <div class="icon">&#x1F6E1;&#xFE0F;</div>
+                <div class="label">3 services notified</div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Reporting services</h2>
+        <p>Each report is sent to all three services simultaneously.</p>
+        <table class="recipients">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Address</th>
+                    <th>Scope</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>APWG</strong><br><span style="color:var(--text-muted);font-size:0.85em">Anti-Phishing Working Group</span></td>
+                    <td><code>reportphishing@apwg.org</code></td>
+                    <td><span class="tag">Global</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Netcraft</strong><br><span style="color:var(--text-muted);font-size:0.85em">Takedown Service</span></td>
+                    <td><code>scam@netcraft.com</code></td>
+                    <td><span class="tag">Global</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Verbraucherzentrale NRW</strong><br><span style="color:var(--text-muted);font-size:0.85em">Consumer Protection</span></td>
+                    <td><code>phishing@verbraucherzentrale.nrw</code></td>
+                    <td><span class="tag">Germany</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Quick install</h2>
+        <p>Setup takes about 5 minutes. You only need to do this once.</p>
+
+        <code class="block">git clone https://github.com/kyannik/applescript-phishing-report.git</code>
+
+        <ol class="steps">
+            <li>
+                <strong>Open Automator</strong>
+                <span>Spotlight &rarr; "Automator" &rarr; New Document &rarr; Quick Action</span>
+            </li>
+            <li>
+                <strong>Configure the workflow</strong>
+                <span>Set "Workflow receives" to <strong>no input</strong> in <strong>Mail.app</strong></span>
+            </li>
+            <li>
+                <strong>Add the script</strong>
+                <span>Search for "Run AppleScript", drag it in, paste the contents of <code>report_phishing.applescript</code></span>
+            </li>
+            <li>
+                <strong>Save</strong>
+                <span>Save as <strong>"Report Phishing"</strong></span>
+            </li>
+            <li>
+                <strong>Assign a shortcut</strong>
+                <span>System Settings &rarr; Keyboard &rarr; Keyboard Shortcuts &rarr; Services &rarr; assign e.g. <code>&#x2303;&#x2325;&#x2318;P</code></span>
+            </li>
+            <li>
+                <strong>Grant permissions</strong>
+                <span>Click "OK" when macOS prompts on first run. If missed: Privacy &amp; Security &rarr; Automation</span>
+            </li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Tested and hardened</h2>
+        <p>The script has been QA-tested against known Apple Mail AppleScript quirks.</p>
+        <ul class="qa-list">
+            <li><span class="qa-check">&#x2713;</span> <span><strong>Async attachment bug</strong> &mdash; <code>delay 2</code> before each send prevents Mail from sending empty reports</span></li>
+            <li><span class="qa-check">&#x2713;</span> <span><strong>IMAP guard</strong> &mdash; skips emails not fully downloaded, continues with the rest</span></li>
+            <li><span class="qa-check">&#x2713;</span> <span><strong>Error resilience</strong> &mdash; one bad email doesn't abort the entire batch</span></li>
+            <li><span class="qa-check">&#x2713;</span> <span><strong>File handle safety</strong> &mdash; nested try-blocks prevent leaked file handles on errors</span></li>
+            <li><span class="qa-check">&#x2713;</span> <span><strong>Temp cleanup</strong> &mdash; <code>.eml</code> files with sensitive content are deleted after sending</span></li>
+            <li><span class="qa-check">&#x2713;</span> <span><strong>Collision-free filenames</strong> &mdash; timestamps prevent overwrites on rapid re-runs</span></li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>
+            <a href="https://github.com/kyannik/applescript-phishing-report">GitHub</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://github.com/kyannik/applescript-phishing-report/issues">Report a bug</a>
+            &nbsp;&middot;&nbsp;
+            MIT License
+        </p>
+    </footer>
+
+</div>
+
+</body>
+</html>
