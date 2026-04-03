@@ -49,13 +49,18 @@ on run {input, parameters}
                     set reportSubject to "[Phishing Report] " & timeStamp & " #" & msgCount
 
                     -- Build structured body for analyst triage
-                    set reportBody to "Phishing/Scam email reported — see .eml attachment." & return & return
-                    set reportBody to reportBody & "--- Metadata ---" & return
-                    set reportBody to reportBody & "From:     " & msgSender & return
-                    set reportBody to reportBody & "Subject:  " & msgSubject & return
-                    set reportBody to reportBody & "Received: " & (msgDate as string) & return
-                    set reportBody to reportBody & "---" & return & return
-                    set reportBody to reportBody & "Reported via Quick Action" & return
+                    set reportBody to "=== PHISHING REPORT ===" & return & return
+                    set reportBody to reportBody & "This email was reported as a suspected phishing/scam message." & return
+                    set reportBody to reportBody & "The original message is attached as a .eml file with full headers" & return
+                    set reportBody to reportBody & "preserved (Received chain, DKIM, SPF, Return-Path, Authentication-Results)." & return & return
+                    set reportBody to reportBody & "Report:    " & msgCount & " of " & totalMessages & return
+                    set reportBody to reportBody & "Reported:  " & timeStamp & return & return
+                    set reportBody to reportBody & "From:      " & msgSender & return
+                    set reportBody to reportBody & "Subject:   " & msgSubject & return
+                    set reportBody to reportBody & "Received:  " & (msgDate as string) & return & return
+                    set reportBody to reportBody & "---" & return
+                    set reportBody to reportBody & "Reported using applescript-phishing-report" & return
+                    set reportBody to reportBody & "https://github.com/kyannik/applescript-phishing-report" & return
 
                     -- Create one outgoing message for this email
                     set newMessage to make new outgoing message with properties {subject:reportSubject, content:reportBody}
